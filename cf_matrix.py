@@ -1,7 +1,3 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 def make_confusion_matrix(cf,
                           group_names=None,
                           categories='auto',
@@ -16,35 +12,22 @@ def make_confusion_matrix(cf,
                           title=None):
     '''
     This function will make a pretty plot of an sklearn Confusion Matrix cm using a Seaborn heatmap visualization.
-
     Arguments
     ---------
     cf:            confusion matrix to be passed in
-
     group_names:   List of strings that represent the labels row by row to be shown in each square.
-
     categories:    List of strings containing the categories to be displayed on the x,y axis. Default is 'auto'
-
     count:         If True, show the raw number in the confusion matrix. Default is True.
-
-    normalize:     If True, show the proportions for each category. Default is True.
-
+    Percent:     If True, show the proportions for each category. Default is True.
     cbar:          If True, show the color bar. The cbar values are based off the values in the confusion matrix.
                    Default is True.
-
     xyticks:       If True, show x and y ticks. Default is True.
-
     xyplotlabels:  If True, show 'True Label' and 'Predicted Label' on the figure. Default is True.
-
     sum_stats:     If True, display summary statistics below the figure. Default is True.
-
     figsize:       Tuple representing the figure size. Default will be the matplotlib rcParams value.
-
     cmap:          Colormap of the values displayed from matplotlib.pyplot.cm. Default is 'Blues'
-                   See http://matplotlib.org/examples/color/colormaps_reference.html
-                   
+                   See http://matplotlib.org/examples/color/colormaps_reference.html            
     title:         Title for the heatmap. Default is None.
-
     '''
 
 
@@ -62,7 +45,12 @@ def make_confusion_matrix(cf,
         group_counts = blanks
 
     if percent:
-        group_percentages = ["{0:.2%}".format(value) for value in cf.flatten()/np.sum(cf)]
+        # The original percent calculation is here, but its no good
+        # group_percentages = ["{0:.2%}".format(value) for value in cf.flatten()/np.sum(cf)]
+        # Fixed below
+        cm_norm = cf_matrix.astype('float') / cf_matrix.sum(axis=1)[:, np.newaxis]
+        group_percentages = cm_norm.flatten()
+        group_percentages = np.around(group_percentages, 2)
     else:
         group_percentages = blanks
 
@@ -98,7 +86,10 @@ def make_confusion_matrix(cf,
         #Do not show categories if xyticks is False
         categories=False
 
-
+    # Fix to color by percentages
+    if percent:
+        cf = cm_norm
+        
     # MAKE THE HEATMAP VISUALIZATION
     plt.figure(figsize=figsize)
     sns.heatmap(cf,annot=box_labels,fmt="",cmap=cmap,cbar=cbar,xticklabels=categories,yticklabels=categories)
